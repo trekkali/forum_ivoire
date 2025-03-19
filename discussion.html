@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Parole d'Ivoire - Discussion</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: {
+              50: '#f0f9ff',
+              100: '#e0f2fe',
+              200: '#bae6fd',
+              300: '#7dd3fc',
+              400: '#38bdf8',
+              500: '#0ea5e9',
+              600: '#0284c7',
+              700: '#0369a1',
+              800: '#075985',
+              900: '#0c4a6e',
+            },
+            secondary: {
+              50: '#fff7ed',
+              100: '#ffedd5',
+              200: '#fed7aa',
+              300: '#fdba74',
+              400: '#fb923c',
+              500: '#f97316',
+              600: '#ea580c',
+              700: '#c2410c',
+              800: '#9a3412',
+              900: '#7c2d12',
+            },
+          },
+          fontFamily: {
+            'sans': ['Poppins', 'sans-serif'],
+          },
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Assurer que la partie messages est scrollable */
+    #messages {
+      max-height: calc(100vh - 300px);
+      overflow-y: auto;
+      scroll-behavior: smooth;
+    }
+   
+    /* Style pour les messages */
+    .message-bubble {
+      max-width: 80%;
+      word-wrap: break-word;
+      margin-bottom: 10px;
+      position: relative;
+      transition: all 0.2s ease;
+    }
+   
+    .message-bubble:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+   
+    /* Barre de défilement personnalisée */
+    #messages::-webkit-scrollbar {
+      width: 8px;
+    }
+   
+    #messages::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 10px;
+    }
+   
+    #messages::-webkit-scrollbar-thumb {
+      background: #0ea5e9;
+      border-radius: 10px;
+    }
+   
+    @media (max-width: 640px) {
+      #messages {
+        max-height: calc(100vh - 350px);
+      }
+     
+      .message-bubble {
+        max-width: 90%;
+      }
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-gray-50 to-blue-50 text-gray-800 font-sans min-h-screen flex flex-col">
+  <!-- Header fixe -->
+  <header class="bg-white shadow-md p-4 fixed top-0 w-full z-20 border-b border-primary-100">
+    <div class="max-w-5xl mx-auto flex justify-between items-center">
+      <div class="flex items-center space-x-4">
+        <a href="index.html" class="text-primary-600 hover:text-primary-700 transition flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+          <span>Retour</span>
+        </a>
+        <h1 id="forumTitle" class="text-xl font-bold bg-gradient-to-r from-primary-600 to-secondary-500 text-transparent bg-clip-text truncate max-w-[200px] sm:max-w-none">Chargement...</h1>
+      </div>
+      <div class="flex items-center space-x-3 sm:space-x-5">
+        <a href="about.html" class="text-primary-600 hover:text-primary-700 transition flex items-center text-sm sm:text-base">
+          <i data-feather="users" class="h-4 w-4 sm:h-5 sm:w-5 mr-1"></i>
+          <span class="hidden sm:inline">Développeurs</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Contenu principal avec marge pour le header -->
+  <main class="flex-grow pt-20 pb-24 px-4">
+    <div class="max-w-3xl mx-auto bg-white rounded-lg shadow-md overflow-hidden">
+      <!-- Zone des messages -->
+      <div id="messages" class="p-4 bg-gray-50"></div>
+     
+      <!-- Formulaire de réponse -->
+      <div class="p-4 bg-white border-t border-gray-200">
+        <form id="messageForm" class="space-y-3">
+          <div class="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
+            <div class="flex-1">
+              <input type="text" id="pseudo" placeholder="Votre pseudo" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-400" />
+            </div>
+            <div class="flex items-center space-x-2">
+              <input type="checkbox" id="anonymous" class="w-4 h-4 text-primary-600" />
+              <label for="anonymous" class="text-sm">Anonyme</label>
+            </div>
+          </div>
+         
+          <div class="relative">
+            <textarea id="message" rows="3" placeholder="Votre message..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-400 resize-none"></textarea>
+            <div id="replyingToIndicator" class="hidden text-xs text-gray-500 mt-1 italic"></div>
+          </div>
+         
+          <div class="flex justify-between items-center">
+            <button id="cancelReply" type="button" class="hidden text-sm text-gray-600 hover:text-gray-800">
+              Annuler la réponse
+            </button>
+            <button type="submit" class="px-4 py-2 bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-lg hover:from-primary-600 hover:to-primary-700 transition shadow-md">
+              Envoyer
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <!-- Importation du script principal -->
+  <script type="module" src="discussion.js"></script>
+  <script src="https://unpkg.com/feather-icons"></script> <!-- Ajouté ici pour charger Feather -->
+  <script>feather.replace();</script> <!-- Ajouté pour rendre les icônes visibles -->
+</body>
+</html>

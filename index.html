@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Parole d'Ivoire - Accueil</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: {
+              50: '#f0f9ff',
+              100: '#e0f2fe',
+              200: '#bae6fd',
+              300: '#7dd3fc',
+              400: '#38bdf8',
+              500: '#0ea5e9',
+              600: '#0284c7',
+              700: '#0369a1',
+              800: '#075985',
+              900: '#0c4a6e',
+            },
+            secondary: {
+              50: '#fff7ed',
+              100: '#ffedd5',
+              200: '#fed7aa',
+              300: '#fdba74',
+              400: '#fb923c',
+              500: '#f97316',
+              600: '#ea580c',
+              700: '#c2410c',
+              800: '#9a3412',
+              900: '#7c2d12',
+            },
+          },
+          fontFamily: {
+            'sans': ['Poppins', 'sans-serif'],
+          },
+        }
+      }
+    }
+  </script>
+  <script src="https://unpkg.com/feather-icons"></script>
+</head>
+<body class="bg-gradient-to-br from-gray-50 to-blue-50 text-gray-800 font-sans min-h-screen flex flex-col">
+  <!-- Header -->
+  <header class="bg-white shadow-md p-4 fixed top-0 w-full z-10 border-b border-primary-100">
+    <div class="max-w-7xl mx-auto flex justify-between items-center px-2 sm:px-4">
+      <a href="index.html" class="text-xl sm:text-2xl font-bold bg-gradient-to-r from-primary-600 to-secondary-500 text-transparent bg-clip-text">Parole d'Ivoire</a>
+      <div class="flex items-center space-x-3 sm:space-x-5">
+        <a href="about.html" class="text-primary-600 hover:text-primary-700 transition flex items-center text-sm sm:text-base">
+          <i data-feather="users" class="h-4 w-4 sm:h-5 sm:w-5 mr-1"></i>
+          <span class="hidden sm:inline">Développeurs</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-grow max-w-full sm:max-w-5xl mx-auto w-full p-5 pt-24 pb-24">
+    <!-- Bouton Créer Forum (flottant fixe sur mobile) -->
+    <button id="createForumBtn" class="fixed bottom-4 right-4 bg-gradient-to-r from-primary-600 to-primary-500 text-white p-3 sm:p-4 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center z-20 sm:static sm:mb-6 sm:w-auto sm:py-3 sm:px-5 sm:rounded-lg">
+      <i data-feather="plus-circle" class="h-6 w-6 sm:mr-2"></i>
+      <span class="hidden sm:inline font-medium">Créer un Forum</span>
+    </button>
+
+    <!-- Barre de recherche pour forums privés -->
+    <div class="mb-6 flex items-center bg-white p-2 sm:p-3 rounded-xl shadow-sm border border-gray-100 w-full">
+      <i data-feather="key" class="text-gray-400 mr-2 h-4 w-4 sm:h-5 sm:w-5"></i>
+      <input type="text" id="searchPrivateForum" placeholder="Entrer le titre d'un forum privé" 
+        class="border-none p-2 rounded w-full focus:outline-none focus:ring-0 bg-transparent text-sm sm:text-base"
+        autocomplete="off">
+      <button id="searchPrivateBtn" class="bg-primary-500 text-white p-2 rounded-lg hover:bg-primary-600 transition-colors flex items-center">
+        <i data-feather="search" class="h-4 w-4 sm:h-5 sm:w-5"></i>
+      </button>
+    </div>
+
+    <!-- Popup Formulaire Création -->
+    <div id="createForumPopup" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-30 hidden">
+      <div class="bg-white p-4 sm:p-6 rounded-xl shadow-lg w-11/12 sm:w-full max-w-md transform transition-all duration-300 ease-in-out">
+        <form id="createForumForm" class="space-y-4">
+          <h3 class="text-lg font-semibold mb-4 text-primary-700">Créer un nouveau forum</h3>
+          
+          <div class="mb-4">
+            <label for="category" class="text-sm text-gray-600 block mb-1">Catégorie</label>
+            <input type="text" id="category" placeholder="Ex: Actualités, Culture..." 
+              class="border border-gray-200 p-2 sm:p-3 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-primary-300 transition text-sm sm:text-base">
+          </div>
+          
+          <div class="mb-4">
+            <label for="titre" class="text-sm text-gray-600 block mb-1">Titre</label>
+            <input type="text" id="titre" placeholder="Titre de votre forum" 
+              class="border border-gray-200 p-2 sm:p-3 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-primary-300 transition text-sm sm:text-base">
+          </div>
+          
+          <div class="mb-4">
+            <label for="message" class="text-sm text-gray-600 block mb-1">Message</label>
+            <textarea id="message" placeholder="Votre message..." rows="3" 
+              class="border border-gray-200 p-2 sm:p-3 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-primary-300 transition text-sm sm:text-base"></textarea>
+          </div>
+          
+          <div class="mb-4">
+            <label for="pseudo" class="text-sm text-gray-600 block mb-1">Pseudo</label>
+            <input type="text" id="pseudo" placeholder="Votre pseudo" 
+              class="border border-gray-200 p-2 sm:p-3 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-primary-300 transition text-sm sm:text-base">
+          </div>
+          
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-center mb-5">
+            <div class="flex items-center">
+              <input type="checkbox" id="isPrivate" class="w-4 h-4 text-primary-600 rounded focus:ring-primary-500">
+              <label for="isPrivate" class="ml-2 text-sm text-gray-600">Forum privé</label>
+            </div>
+            <div class="flex-grow">
+              <input type="text" id="password" placeholder="Mot de passe (si privé)" 
+                class="border border-gray-200 p-2 sm:p-3 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-primary-300 transition text-sm sm:text-base" disabled>
+            </div>
+          </div>
+          
+          <div class="flex justify-end gap-2">
+            <button type="button" id="cancelForumBtn" class="px-3 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition text-sm sm:text-base">
+              Annuler
+            </button>
+            <button type="submit" class="bg-gradient-to-r from-primary-600 to-primary-500 text-white py-2 px-3 sm:py-3 sm:px-4 rounded-lg hover Labrador-700 hover:to-primary-600 transition font-medium flex items-center justify-center text-sm sm:text-base">
+              <i data-feather="send" class="mr-2 h-4 w-4 sm:h-5 sm:w-5"></i> Publier
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Section Tendances -->
+    <section class="mb-8">
+      <h2 class="text-lg sm:text-xl font-semibold mb-4 sm:mb-5 flex items-center text-gray-800">
+        <i data-feather="trending-up" class="mr-2 text-secondary-500 h-5 w-5 sm:h-6 sm:w-6"></i> Tendances
+      </h2>
+      <div id="trending" class="flex space-x-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-gray-300 snap-x w-full">
+        <!-- Dynamique via app.js -->
+      </div>
+    </section>
+
+    <!-- Section Catégories -->
+    <section class="mb-8">
+      <h2 class="text-lg sm:text-xl font-semibold mb-4 sm:mb-5 flex items-center text-gray-800">
+        <i data-feather="filter" class="mr-2 text-secondary-500 h-5 w-5 sm:h-6 sm:w-6"></i> Catégories
+      </h2>
+      <div id="categories" class="flex flex-wrap gap-2 w-full">
+        <!-- Dynamique via app.js -->
+      </div>
+    </section>
+
+    <!-- Section Forums Récents -->
+    <section>
+      <h2 class="text-lg sm:text-xl font-semibold mb-4 sm:mb-5 flex items-center text-gray-800">
+        <i data-feather="message-square" class="mr-2 text-secondary-500 h-5 w-5 sm:h-6 sm:w-6"></i> Forums Récents
+      </h2>
+      <div id="forums" class="space-y-4 w-full">
+        <!-- Dynamique via app.js -->
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-white shadow-md p-4 fixed bottom-0 w-full border-t border-primary-100 z-10">
+    <div class="max-w-7xl mx-auto text-center text-gray-600 px-2 sm:px-4">
+      <p class="flex items-center justify-center flex-wrap gap-x-2 sm:gap-x-3 text-sm sm:text-base">
+        <span>Par</span>
+        <a href="about.html" class="text-primary-600 hover:text-primary-700 transition flex items-center">
+          <i data-feather="users" class="h-4 w-4 mr-1"></i> Développeurs
+        </a>
+      </p>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script>
+    document.getElementById('isPrivate').addEventListener('change', (e) => {
+      document.getElementById('password').disabled = !e.target.checked;
+      if (!e.target.checked) document.getElementById('password').value = '';
+    });
+  </script>
+  <script type="module" src="app.js"></script>
+  <script>feather.replace();</script>
+</body>
+</html>

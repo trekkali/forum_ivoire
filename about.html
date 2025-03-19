@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Parole d'Ivoire - À propos</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: {
+              50: '#f0f9ff',
+              100: '#e0f2fe',
+              200: '#bae6fd',
+              300: '#7dd3fc',
+              400: '#38bdf8',
+              500: '#0ea5e9',
+              600: '#0284c7',
+              700: '#0369a1',
+              800: '#075985',
+              900: '#0c4a6e',
+            },
+            secondary: {
+              50: '#fff7ed',
+              100: '#ffedd5',
+              200: '#fed7aa',
+              300: '#fdba74',
+              400: '#fb923c',
+              500: '#f97316',
+              600: '#ea580c',
+              700: '#c2410c',
+              800: '#9a3412',
+              900: '#7c2d12',
+            },
+            green: { // Ajout d'une palette verte pour Bienvenu
+              50: '#f0fdf4',
+              100: '#dcfce7',
+              200: '#bbf7d0',
+              300: '#86efac',
+              400: '#4ade80',
+              500: '#22c55e',
+              600: '#16a34a',
+              700: '#15803d',
+              800: '#166534',
+              900: '#14532d',
+            },
+          },
+          fontFamily: {
+            'sans': ['Poppins', 'sans-serif'],
+          },
+        }
+      }
+    }
+  </script>
+  <script src="https://unpkg.com/feather-icons"></script>
+</head>
+<body class="bg-gradient-to-br from-gray-50 to-blue-50 text-gray-800 font-sans min-h-screen flex flex-col">
+  <!-- Header -->
+  <header class="bg-white shadow-md p-4 fixed top-0 w-full z-10 border-b border-primary-100">
+    <div class="max-w-7xl mx-auto flex justify-between items-center px-2 sm:px-4">
+      <a href="index.html" class="text-xl sm:text-2xl font-bold bg-gradient-to-r from-primary-600 to-secondary-500 text-transparent bg-clip-text">Parole d'Ivoire</a>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-grow pt-24 pb-24 mx-auto p-5 w-full max-w-full sm:max-w-5xl">
+    <!-- Section Bannière -->
+    <div class="bg-gradient-to-r from-primary-600 to-primary-400 rounded-2xl shadow-lg p-6 sm:p-8 mb-10 sm:mb-12 text-white text-center">
+      <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold mb-4">À propos de Parole d'Ivoire</h1>
+      <p class="text-base sm:text-lg md:text-xl text-primary-50">Un espace d'expression libre pour tous les Ivoiriens</p>
+    </div>
+   
+    <!-- Section Notre Vision -->
+    <section class="mb-12 sm:mb-16">
+      <div class="bg-white rounded-xl shadow-md p-6 sm:p-8 relative overflow-hidden">
+        <div class="absolute top-0 right-0 h-32 w-32 bg-primary-100 rounded-bl-full opacity-50"></div>
+        <h2 class="text-xl sm:text-2xl font-bold text-primary-700 mb-6 flex items-center">
+          <i data-feather="eye" class="mr-3 text-secondary-500 h-5 w-5 sm:h-6 sm:w-6"></i>
+          Notre Vision
+        </h2>
+        <div class="space-y-4 text-gray-700 text-sm sm:text-base">
+          <p><span class="font-medium text-primary-600">Parole d'Ivoire</span> est né de la volonté de créer un espace de dialogue authentique, où chaque voix compte et peut être entendue. Dans un monde où la communication est souvent unilatérale, nous avons imaginé une plateforme où chacun peut s'exprimer librement sur les sujets qui lui tiennent à cœur.</p>
+          <p>Notre forum se veut un carrefour d'idées, une agora moderne où les opinions diverses se confrontent dans le respect mutuel. Qu'il s'agisse de débattre d'actualités, de partager des éléments culturels ou de discuter de sujets de société, <span class="font-medium text-primary-600">Parole d'Ivoire</span> est votre espace.</p>
+          <div class="flex flex-col md:flex-row gap-4 sm:gap-6 mt-6 sm:mt-8">
+            <div class="bg-primary-50 p-4 sm:p-5 rounded-lg flex-1">
+              <div class="text-primary-600 mb-3 flex justify-center">
+                <i data-feather="message-circle" class="h-8 w-8 sm:h-10 sm:w-10"></i>
+              </div>
+              <h3 class="text-base sm:text-lg font-semibold text-center mb-2">Dialogue Ouvert</h3>
+              <p class="text-gray-600 text-center">Nous encourageons les échanges constructifs entre tous les membres de notre communauté.</p>
+            </div>
+            <div class="bg-primary-50 p-4 sm:p-5 rounded-lg flex-1">
+              <div class="text-primary-600 mb-3 flex justify-center">
+                <i data-feather="shield" class="h-8 w-8 sm:h-10 sm:w-10"></i>
+              </div>
+              <h3 class="text-base sm:text-lg font-semibold text-center mb-2">Respect Mutuel</h3>
+              <p class="text-gray-600 text-center">La diversité des opinions est notre richesse, le respect est notre fondement.</p>
+            </div>
+            <div class="bg-primary-50 p-4 sm:p-5 rounded-lg flex-1">
+              <div class="text-primary-600 mb-3 flex justify-center">
+                <i data-feather="users" class="h-8 w-8 sm:h-10 sm:w-10"></i>
+              </div>
+              <h3 class="text-base sm:text-lg font-semibold text-center mb-2">Communauté</h3>
+              <p class="text-gray-600 text-center">Ensemble, nous construisons un espace numérique où chacun trouve sa place.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+   
+    <!-- Section Notre Équipe -->
+    <section class="mb-12 sm:mb-16">
+      <div class="bg-white rounded-xl shadow-md p-6 sm:p-8">
+        <h2 class="text-xl sm:text-2xl font-bold text-primary-700 mb-6 sm:mb-8 flex items-center">
+          <i data-feather="award" class="mr-3 text-secondary-500 h-5 w-5 sm:h-6 sm:w-6"></i>
+          Notre Équipe
+        </h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8">
+          <!-- Développeur 1 : Andy B -->
+          <div class="bg-gradient-to-br from-gray-50 to-primary-50 p-5 sm:p-6 rounded-xl border border-primary-100 flex flex-col items-center">
+            <div class="mb-4 relative">
+              <div class="w-24 h-24 sm:w-28 sm:h-28 overflow-hidden rounded-full border-4 border-primary-200">
+                <img src="/api/placeholder/200/200" alt="Andy B" class="w-full h-full object-cover">
+              </div>
+              <div class="absolute bottom-0 right-0 bg-primary-500 text-white p-2 rounded-full">
+                <i data-feather="code" class="h-4 w-4"></i>
+              </div>
+            </div>
+            <h3 class="text-lg sm:text-xl font-semibold text-primary-700 mb-1">Andy B</h3>
+            <p class="text-gray-600 mb-3 text-sm sm:text-base">Développeur Principal</p>
+            <p class="text-gray-700 text-center mb-4 text-sm sm:text-base">Passionné de développement web et créateur de solutions innovantes pour la communauté ivoirienne.</p>
+            <div class="flex flex-wrap justify-center gap-2 sm:gap-3 w-full">
+              <a href="https://www.instagram.com/b.andysa/" target="_blank" class="flex items-center px-2 py-1 sm:px-3 sm:py-2 bg-primary-100 hover:bg-primary-200 text-primary-700 rounded-lg transition text-sm sm:text-base">
+                <i data-feather="instagram" class="h-4 w-4 mr-2"></i> Instagram
+              </a>
+              <a href="https://wa.me/2250500405056" target="_blank" class="flex items-center px-2 py-1 sm:px-3 sm:py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg transition text-sm sm:text-base">
+                <i data-feather="message-circle" class="h-4 w-4 mr-2"></i> WhatsApp
+              </a>
+              <a href="mailto:andyb@example.com" class="flex items-center px-2 py-1 sm:px-3 sm:py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg transition text-sm sm:text-base">
+                <i data-feather="mail" class="h-4 w-4 mr-2"></i> Email
+              </a>
+            </div>
+          </div>
+         
+          <!-- Développeur 2 : Sarah K -->
+          <div class="bg-gradient-to-br from-gray-50 to-secondary-50 p-5 sm:p-6 rounded-xl border border-secondary-100 flex flex-col items-center">
+            <div class="mb-4 relative">
+              <div class="w-24 h-24 sm:w-28 sm:h-28 overflow-hidden rounded-full border-4 border-secondary-200">
+                <img src="/api/placeholder/200/200" alt="Sarah K" class="w-full h-full object-cover">
+              </div>
+              <div class="absolute bottom-0 right-0 bg-secondary-500 text-white p-2 rounded-full">
+                <i data-feather="layout" class="h-4 w-4"></i>
+              </div>
+            </div>
+            <h3 class="text-lg sm:text-xl font-semibold text-secondary-700 mb-1">Sarah K</h3>
+            <p class="text-gray-600 mb-3 text-sm sm:text-base">UI/UX Designer</p>
+            <p class="text-gray-700 text-center mb-4 text-sm sm:text-base">Créative et attentive aux détails, elle veille à l'expérience utilisateur et à l'esthétique de la plateforme.</p>
+            <div class="flex flex-wrap justify-center gap-2 sm:gap-3 w-full">
+              <a href="https://www.instagram.com/sarahk/" target="_blank" class="flex items-center px-2 py-1 sm:px-3 sm:py-2 bg-secondary-100 hover:bg-secondary-200 text-secondary-700 rounded-lg transition text-sm sm:text-base">
+                <i data-feather="instagram" class="h-4 w-4 mr-2"></i> Instagram
+              </a>
+              <a href="https://wa.me/2250700001122" target="_blank" class="flex items-center px-2 py-1 sm:px-3 sm:py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg transition text-sm sm:text-base">
+                <i data-feather="message-circle" class="h-4 w-4 mr-2"></i> WhatsApp
+              </a>
+              <a href="mailto:sarahk@example.com" class="flex items-center px-2 py-1 sm:px-3 sm:py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg transition text-sm sm:text-base">
+                <i data-feather="mail" class="h-4 w-4 mr-2"></i> Email
+              </a>
+            </div>
+          </div>
+
+          <!-- Développeur 3 : Bienvenu Y. Sekongo -->
+          <div class="bg-gradient-to-br from-gray-50 to-green-50 p-5 sm:p-6 rounded-xl border border-green-100 flex flex-col items-center">
+            <div class="mb-4 relative">
+              <div class="w-24 h-24 sm:w-28 sm:h-28 overflow-hidden rounded-full border-4 border-green-200">
+                <img src="/api/placeholder/200/200" alt="Bienvenu Y. Sekongo" class="w-full h-full object-cover">
+              </div>
+              <div class="absolute bottom-0 right-0 bg-green-500 text-white p-2 rounded-full">
+                <i data-feather="server" class="h-4 w-4"></i>
+              </div>
+            </div>
+            <h3 class="text-lg sm:text-xl font-semibold text-green-700 mb-1">Bienvenu Y. Sekongo</h3>
+            <p class="text-gray-600 mb-3 text-sm sm:text-base">Fullstack Développeur</p>
+            <p class="text-gray-700 text-center mb-4 text-sm sm:text-base">Expert en solutions complètes, il allie créativité et technicité pour bâtir des outils robustes au service de la communauté ivoirienne.</p>
+            <div class="flex flex-wrap justify-center gap-2 sm:gap-3 w-full">
+              <a href="https://www.instagram.com/sek.y_ben/" target="_blank" class="flex items-center px-2 py-1 sm:px-3 sm:py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg transition text-sm sm:text-base">
+                <i data-feather="instagram" class="h-4 w-4 mr-2"></i> Instagram
+              </a>
+              <a href="https://wa.me/2250556289835" target="_blank" class="flex items-center px-2 py-1 sm:px-3 sm:py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg transition text-sm sm:text-base">
+                <i data-feather="message-circle" class="h-4 w-4 mr-2"></i> WhatsApp
+              </a>
+              <a href="mailto:sekongobienvenu22@gmail.com" class="flex items-center px-2 py-1 sm:px-3 sm:py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg transition text-sm sm:text-base">
+                <i data-feather="mail" class="h-4 w-4 mr-2"></i> Email
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+   
+    <!-- Section Notre Technologie -->
+    <section>
+      <div class="bg-white rounded-xl shadow-md p-6 sm:p-8">
+        <h2 class="text-xl sm:text-2xl font-bold text-primary-700 mb-6 flex items-center">
+          <i data-feather="cpu" class="mr-3 text-secondary-500 h-5 w-5 sm:h-6 sm:w-6"></i>
+          Notre Technologie
+        </h2>
+        <p class="text-gray-700 mb-6 text-sm sm:text-base">Parole d'Ivoire utilise des technologies modernes pour offrir une expérience utilisateur fluide et réactive :</p>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div class="bg-gray-50 p-4 rounded-lg text-center">
+            <div class="text-primary-600 mb-2 flex justify-center">
+              <i data-feather="code" class="h-8 w-8"></i> <!-- Icône corrigée pour HTML5 -->
+            </div>
+            <p class="font-medium text-sm sm:text-base">HTML5</p>
+          </div>
+          <div class="bg-gray-50 p-4 rounded-lg text-center">
+            <div class="text-primary-600 mb-2 flex justify-center">
+              <i data-feather="layout" class="h-8 w-8"></i>
+            </div>
+            <p class="font-medium text-sm sm:text-base">Tailwind CSS</p>
+          </div>
+          <div class="bg-gray-50 p-4 rounded-lg text-center">
+            <div class="text-primary-600 mb-2 flex justify-center">
+              <i data-feather="code" class="h-8 w-8"></i>
+            </div>
+            <p class="font-medium text-sm sm:text-base">JavaScript</p>
+          </div>
+          <div class="bg-gray-50 p-4 rounded-lg text-center">
+            <div class="text-primary-600 mb-2 flex justify-center">
+              <i data-feather="server" class="h-8 w-8"></i>
+            </div>
+            <p class="font-medium text-sm sm:text-base">Backend API</p>
+          </div>
+        </div>
+        <div class="mt-8 sm:mt-10 bg-primary-50 p-4 sm:p-6 rounded-lg">
+          <h3 class="text-base sm:text-lg font-semibold text-primary-700 mb-3">Contribuer au projet</h3>
+          <p class="text-gray-700 mb-4 text-sm sm:text-base">Vous êtes développeur et souhaitez contribuer à l'amélioration de Parole d'Ivoire ? Contactez notre équipe !</p>
+          <a href="mailto:contact@paroledivoire.com" class="inline-flex items-center px-3 py-2 sm:px-4 sm:py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition text-sm sm:text-base">
+            <i data-feather="mail" class="h-4 w-4 mr-2"></i> Nous contacter
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-white shadow-md p-4 fixed bottom-0 w-full border-t border-primary-100 z-10">
+    <div class="max-w-7xl mx-auto text-center text-gray-600 px-2 sm:px-4">
+      <p class="flex items-center justify-center flex-wrap gap-x-2 sm:gap-x-3 text-sm sm:text-base">
+        <span>Par</span>
+        <a href="about.html" class="text-primary-600 hover:text-primary-700 transition flex items-center">
+          <i data-feather="users" class="h-4 w-4 mr-1"></i> Développeurs
+        </a>
+      </p>
+    </div>
+  </footer>
+
+  <script>feather.replace();</script>
+</body>
+</html>

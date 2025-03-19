@@ -1,0 +1,17 @@
+{
+  "name": "forum",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.1",
+    "javascript-obfuscator": "^4.1.1",
+    "node-fetch": "^3.3.2"
+  }
+}
