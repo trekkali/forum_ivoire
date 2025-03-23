@@ -66,7 +66,10 @@ if (!subjectId) {
 
     async function loadForum() {
       console.log('Chargement du forum pour subjectId:', subjectId);
-      const { data: subjects, error: subjectError } = await supabase.from('subjects').select('*').eq('id', subjectId);
+      const { data: subjects, error: subjectError } = await supabase
+        .from('subjects')
+        .select('*, categories(name)')
+        .eq('id', subjectId);
       if (subjectError || !subjects.length) {
         console.error('Erreur ou forum introuvable :', subjectError);
         document.getElementById('forumTitle').textContent = 'Forum non trouvé';
@@ -74,7 +77,7 @@ if (!subjectId) {
       }
       forum = subjects[0];
       console.log('Forum chargé :', forum);
-
+    
       if (!forum.isPrivate || (forum.isPrivate && localStorage.getItem(`forumPassword_${subjectId}`) === forum.password)) {
         const currentCount = forum.participantcount || 0;
         const { error: updateError } = await supabase
@@ -104,7 +107,7 @@ if (!subjectId) {
         }
       }
 
-      document.getElementById('forumTitle').textContent = `${forum.titre} (${forum.category})`;
+      document.getElementById('forumTitle').textContent = `${forum.titre} (${forum.categories.name})`;
 
       const { data: replies, error: repliesError } = await supabase
         .from('replies')

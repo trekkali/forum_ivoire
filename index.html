@@ -80,13 +80,19 @@
     <!-- Popup Formulaire Création -->
     <div id="createForumPopup" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-30 hidden">
       <div class="bg-white p-4 sm:p-6 rounded-xl shadow-lg w-11/12 sm:w-full max-w-md transform transition-all duration-300 ease-in-out">
-        <form id="createForumForm" class="space-y-4">
+        <form id="createForm" class="space-y-4">
           <h3 class="text-lg font-semibold mb-4 text-primary-700">Créer un nouveau forum</h3>
           
           <div class="mb-4">
             <label for="category" class="text-sm text-gray-600 block mb-1">Catégorie</label>
-            <input type="text" id="category" placeholder="Ex: Actualités, Culture..." 
-              class="border border-gray-200 p-2 sm:p-3 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-primary-300 transition text-sm sm:text-base">
+            <select id="category" class="border border-gray-200 p-2 sm:p-3 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-primary-300 transition text-sm sm:text-base">
+              <option value="" disabled selected>Choisir une catégorie</option>
+              <!-- Options chargées dynamiquement via app.js -->
+            </select>
+            <div id="customCategoryWrapper" class="mt-2 hidden">
+              <input type="text" id="customCategory" placeholder="Proposer une nouvelle catégorie" 
+                class="border border-gray-200 p-2 sm:p-3 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-primary-300 transition text-sm sm:text-base">
+            </div>
           </div>
           
           <div class="mb-4">

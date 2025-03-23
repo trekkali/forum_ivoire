@@ -11,9 +11,12 @@ let allSubjects = [];
 
 async function loadSubjects() {
   console.log('Chargement des sujets...');
-  const { data, error } = await supabase.from('subjects').select('*').order('date', { ascending: false });
+  const { data, error } = await supabase
+    .from('subjects')
+    .select('*, categories(name)')
+    .order('date', { ascending: false });
   if (error) {
-    console.error('Erreur chargement sujets :', error.message, error.details);
+    console.error('Erreur chargement sujets :', error);
     return;
   }
   console.log('Sujets chargés :', data);
@@ -22,13 +25,13 @@ async function loadSubjects() {
   const trending = data.filter(s => (s.replyCount > 2) && !s.isPrivate);
   document.getElementById('trending').innerHTML = trending.map(s => `
     <div class="bg-white p-4 rounded shadow min-w-[250px]">
-      <h3 class="font-semibold">${s.titre} <span class="text-sm text-gray-500">(${s.category})</span></h3>
+      <h3 class="font-semibold">${s.titre} <span class="text-sm text-gray-500">(${s.categories.name})</span></h3>
       <p class="text-sm text-gray-600">${s.message.substring(0, 50)}...</p>
       <a href="discussion.html?id=${s.id}" class="text-blue-500 hover:underline">Voir</a>
     </div>
   `).join('');
 
-  const categories = [...new Set(data.filter(s => !s.isPrivate).map(s => s.category))];
+  const categories = [...new Set(data.filter(s => !s.isPrivate).map(s => s.categories.name))];
   document.getElementById('categories').innerHTML = `<button class="bg-gray-200 p-2 rounded hover:bg-gray-300" onclick="filterByCategory('all')">Toutes</button>` + 
     categories.map(cat => `<button class="bg-gray-200 p-2 rounded hover:bg-gray-300" onclick="filterByCategory('${cat}')">${cat}</button>`).join('');
 
@@ -39,7 +42,7 @@ function renderForums(subjects) {
   console.log('Rendu des forums :', subjects);
   document.getElementById('forums').innerHTML = subjects.map(s => `
     <div class="bg-white p-4 rounded shadow hover:shadow-lg transition-shadow">
-      <h3 class="font-semibold">${s.titre} <span class="text-sm text-gray-500">(${s.category})</span></h3>
+      <h3 class="font-semibold">${s.titre} <span class="text-sm text-gray-500">(${s.categories.name})</span></h3>
       <p class="text-sm text-gray-600">${s.message.substring(0, 100)}...</p>
       ${s.fileUrl ? `<a href="${s.fileUrl}" target="_blank" class="text-blue-500 underline">Fichier</a>` : ''}
       <p class="text-sm text-gray-500">Par ${s.pseudo} - ${new Date(s.date).toLocaleString('fr-FR')}</p>
@@ -55,18 +58,36 @@ function renderForums(subjects) {
       </div>
     </div>
   `).join('');
-  feather.replace(); // Réinitialise les icônes Feather après ajout dynamique
+  feather.replace();
 }
 
 window.filterByCategory = (category) => {
   console.log('Filtrage par catégorie :', category);
   if (category === 'all') renderForums(allSubjects.filter(s => !s.isPrivate));
-  else renderForums(allSubjects.filter(s => s.category === category && !s.isPrivate));
+  else renderForums(allSubjects.filter(s => s.categories.name === category && !s.isPrivate));
 };
+
+//fonction pour charger les catégories officielles au démarrage
+async function loadCategories() {
+  const { data, error } = await supabase
+    .from('categories')
+    .select('*')
+    .eq('is_official', true)
+    .order('name');
+  if (error) {
+    console.error('Erreur chargement catégories :', error);
+    return;
+  }
+  const categorySelect = document.getElementById('category');
+  categorySelect.innerHTML = '<option value="" disabled selected>Choisir une catégorie</option>' +
+    data.map(cat => `<option value="${cat.id}">${cat.name}</option>`).join('') +
+    '<option value="other">Autre</option>';
+}
+
 
 const createBtn = document.getElementById('createForumBtn');
 const createPopup = document.getElementById('createForumPopup');
-const createForm = document.getElementById('createForumForm');
+const createForm = document.getElementById('createForm');
 const pseudoInput = document.getElementById('pseudo');
 const privateCheckbox = document.getElementById('isPrivate');
 const passwordInput = document.getElementById('password');
@@ -89,7 +110,8 @@ cancelBtn.addEventListener('click', () => {
 createForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   console.log('Formulaire de création soumis');
-  const form = e.target;
+  const categoryId = document.getElementById('category').value;
+  const customCategory = document.getElementById('customCategory').value.trim().toLowerCase();
   const pseudo = pseudoInput.value.trim() || 'Anonyme';
   if (pseudo !== 'Anonyme') localStorage.setItem('forumPseudo', pseudo);
 
@@ -98,68 +120,138 @@ createForm.addEventListener('submit', async (e) => {
 
   if (isPrivate && !password) {
     alert('Un mot de passe est requis pour un forum privé.');
-    console.log('Erreur : mot de passe manquant');
     return;
   }
 
   const subjectId = uuidv4();
   const subject = {
     id: subjectId,
-    category: form.category.value.trim(),
-    titre: form.titre.value.trim(),
-    message: form.message.value.trim(),
+    titre: createForm.titre.value.trim(), // Remplace form par createForm
+    message: createForm.message.value.trim(), // Remplace form par createForm
     pseudo,
     date: Date.now(),
     replyCount: 0,
     participantcount: 0,
     isPrivate,
-    password: isPrivate ? password : null
+    password: isPrivate ? password : null,
   };
-  console.log('Sujet à insérer :', subject);
 
-  if (!subject.category || !subject.titre || !subject.message) {
-    alert('Tous les champs (Catégorie, Titre, Message) sont obligatoires.');
-    console.log('Champs manquants :', subject);
+  // Gestion de la catégorie
+  if (categoryId === 'other') {
+    if (!customCategory) {
+      alert('Veuillez proposer une catégorie.');
+      return;
+    }
+    // Par défaut, associe à "Divers"
+    const { data: diversCat } = await supabase
+      .from('categories')
+      .select('id')
+      .eq('name', 'Divers')
+      .single();
+    subject.category_id = diversCat.id;
+    subject.suggested_category = customCategory;
+
+    // Vérifier si la suggestion existe déjà
+    const { data: existingSuggestion } = await supabase
+      .from('category_suggestions')
+      .select('*')
+      .eq('name', customCategory)
+      .single();
+
+    if (existingSuggestion) {
+      await supabase
+        .from('category_suggestions')
+        .update({ proposal_count: existingSuggestion.proposal_count + 1 })
+        .eq('id', existingSuggestion.id);
+    } else {
+      await supabase
+        .from('category_suggestions')
+        .insert({ name: customCategory, proposed_by: pseudo });
+    }
+
+    // Validation automatique si seuil atteint (ex. 5)
+    await validateSuggestions();
+  } else {
+    subject.category_id = categoryId;
+  }
+
+  if (!subject.titre || !subject.message) {
+    alert('Tous les champs (Titre, Message) sont obligatoires.');
     return;
   }
 
-  try {
-    const { data: subjectData, error: subjectError } = await supabase.from('subjects').insert(subject).select();
-    if (subjectError) {
-      console.error('Erreur insertion sujet :', subjectError.message, subjectError.details);
-      alert('Erreur lors de la création du forum. Détails : ' + subjectError.message);
-      return;
-    }
-    console.log('Sujet inséré :', subjectData);
-
-    const initialReply = {
-      id: uuidv4(),
-      subjectid: subjectId,
-      pseudo,
-      texte: form.message.value.trim(),
-      date: Date.now(),
-      replyingTo: null
-    };
-    console.log('Réponse initiale à insérer :', initialReply);
-
-    const { data: replyData, error: replyError } = await supabase.from('replies').insert(initialReply).select();
-    if (replyError) {
-      console.error('Erreur insertion réponse initiale :', replyError.message, replyError.details);
-      alert('Erreur lors de l\'enregistrement du message initial. Détails : ' + replyError.message);
-      return;
-    }
-    console.log('Réponse initiale insérée :', replyData);
-
-    createPopup.classList.add('hidden');
-    form.reset();
-    pseudoInput.value = pseudo;
-    alert('Forum créé avec succès !');
-    loadSubjects();
-  } catch (error) {
-    console.error('Erreur inattendue :', error);
-    alert('Une erreur inattendue est survenue. Vérifiez la console.');
+  const { data: subjectData, error: subjectError } = await supabase.from('subjects').insert(subject).select();
+  if (subjectError) {
+    console.error('Erreur insertion sujet :', subjectError);
+    alert('Erreur création forum : ' + subjectError.message);
+    return;
   }
+
+  const initialReply = {
+    id: uuidv4(),
+    subjectid: subjectId,
+    pseudo,
+    texte: createForm.message.value.trim(), // Remplace form par createForm
+    date: Date.now(),
+    replyingTo: null
+  };
+  const { error: replyError } = await supabase.from('replies').insert(initialReply);
+  if (replyError) {
+    console.error('Erreur insertion réponse :', replyError);
+    alert('Erreur message initial : ' + replyError.message);
+    return;
+  }
+
+  createPopup.classList.add('hidden');
+  createForm.reset(); // Remplace form par createForm
+  pseudoInput.value = pseudo;
+  alert('Forum créé avec succès !');
+  loadSubjects();
 });
+
+// Fonction de validation automatique
+async function validateSuggestions() {
+  const THRESHOLD = 5; // Seuil pour qu'une suggestion devienne officielle
+  const { data: suggestions } = await supabase
+    .from('category_suggestions')
+    .select('*')
+    .gte('proposal_count', THRESHOLD);
+
+  for (const suggestion of suggestions) {
+    // Vérifier si la catégorie existe déjà
+    const { data: existingCategory } = await supabase
+      .from('categories')
+      .select('id')
+      .eq('name', suggestion.name)
+      .single();
+
+    let categoryId;
+    if (!existingCategory) {
+      const { data: newCategory } = await supabase
+        .from('categories')
+        .insert({ name: suggestion.name })
+        .select()
+        .single();
+      categoryId = newCategory.id;
+    } else {
+      categoryId = existingCategory.id;
+    }
+
+    // Mettre à jour les sujets avec cette suggestion
+    await supabase
+      .from('subjects')
+      .update({ category_id: categoryId, suggested_category: null })
+      .eq('suggested_category', suggestion.name);
+
+    // Supprimer la suggestion validée
+    await supabase
+      .from('category_suggestions')
+      .delete()
+      .eq('id', suggestion.id);
+  }
+  console.log('Suggestion envoyée ! Elle sera validée après 5 propositions.');
+  loadCategories(); // Rafraîchir le menu déroulant
+}
 
 document.getElementById('searchPrivateBtn').addEventListener('click', () => {
   console.log('Recherche de forum privé');
@@ -195,6 +287,13 @@ document.getElementById('searchPrivateBtn').addEventListener('click', () => {
   }
 });
 
+//écouteur pour afficher/masquer le champ personnalisé
+document.getElementById('category').addEventListener('change', (e) => {
+  const customWrapper = document.getElementById('customCategoryWrapper');
+  customWrapper.classList.toggle('hidden', e.target.value !== 'other');
+  if (e.target.value !== 'other') document.getElementById('customCategory').value = '';
+});
+
 // Gestion des boutons de partage et copie
 document.addEventListener('click', (e) => {
   if (e.target.classList.contains('share-btn')) {
@@ -222,4 +321,9 @@ document.addEventListener('click', (e) => {
   }
 });
 
+
+
+
+// Appeler au démarrage
 loadSubjects();
+loadCategories();
