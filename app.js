@@ -117,17 +117,29 @@ createForm.addEventListener('submit', async (e) => {
 
   const isPrivate = privateCheckbox.checked;
   const password = passwordInput.value.trim();
+  const titre = createForm.titre.value.trim();
 
   if (isPrivate && !password) {
     alert('Un mot de passe est requis pour un forum privé.');
     return;
   }
 
+  // Vérifier l’unicité du titre
+  const { data: existingSubject } = await supabase
+    .from('subjects')
+    .select('id')
+    .eq('titre', titre)
+    .single();
+  if (existingSubject) {
+    alert('Ce titre existe déjà. Veuillez choisir un titre unique.');
+    return;
+  }
+
   const subjectId = uuidv4();
   const subject = {
     id: subjectId,
-    titre: createForm.titre.value.trim(), // Remplace form par createForm
-    message: createForm.message.value.trim(), // Remplace form par createForm
+    titre,
+    message: createForm.message.value.trim(),
     pseudo,
     date: Date.now(),
     replyCount: 0,
@@ -142,7 +154,6 @@ createForm.addEventListener('submit', async (e) => {
       alert('Veuillez proposer une catégorie.');
       return;
     }
-    // Par défaut, associe à "Divers"
     const { data: diversCat } = await supabase
       .from('categories')
       .select('id')
@@ -151,7 +162,6 @@ createForm.addEventListener('submit', async (e) => {
     subject.category_id = diversCat.id;
     subject.suggested_category = customCategory;
 
-    // Vérifier si la suggestion existe déjà
     const { data: existingSuggestion } = await supabase
       .from('category_suggestions')
       .select('*')
@@ -168,8 +178,6 @@ createForm.addEventListener('submit', async (e) => {
         .from('category_suggestions')
         .insert({ name: customCategory, proposed_by: pseudo });
     }
-
-    // Validation automatique si seuil atteint (ex. 5)
     await validateSuggestions();
   } else {
     subject.category_id = categoryId;
@@ -191,7 +199,7 @@ createForm.addEventListener('submit', async (e) => {
     id: uuidv4(),
     subjectid: subjectId,
     pseudo,
-    texte: createForm.message.value.trim(), // Remplace form par createForm
+    texte: createForm.message.value.trim(),
     date: Date.now(),
     replyingTo: null
   };
@@ -203,7 +211,7 @@ createForm.addEventListener('submit', async (e) => {
   }
 
   createPopup.classList.add('hidden');
-  createForm.reset(); // Remplace form par createForm
+  createForm.reset();
   pseudoInput.value = pseudo;
   alert('Forum créé avec succès !');
   loadSubjects();
@@ -253,38 +261,69 @@ async function validateSuggestions() {
   loadCategories(); // Rafraîchir le menu déroulant
 }
 
-document.getElementById('searchPrivateBtn').addEventListener('click', () => {
-  console.log('Recherche de forum privé');
-  const searchValue = document.getElementById('searchPrivateForum').value.trim();
+// Recherche en temps réel
+document.getElementById('searchForum').addEventListener('input', (e) => {
+  document.getElementById('clearSearch').classList.toggle('hidden', !e.target.value);
+  const searchValue = e.target.value.trim().toLowerCase();
+  const privateOnly = document.getElementById('privateOnly').checked;
+  const resultsDiv = document.getElementById('searchResults');
+
   if (!searchValue) {
-    alert('Veuillez entrer le titre d’un forum privé.');
+    resultsDiv.classList.add('hidden');
+    resultsDiv.classList.remove('scale-y-100', 'opacity-100');
+    resultsDiv.classList.add('scale-y-95', 'opacity-0');
     return;
   }
-  const matchingForums = allSubjects.filter(s => s.titre.toLowerCase() === searchValue.toLowerCase() && s.isPrivate);
+
+  const matchingForums = allSubjects.filter(s => 
+    (privateOnly ? s.isPrivate : true) && (
+      s.titre.toLowerCase().includes(searchValue) ||
+      s.message.toLowerCase().includes(searchValue) ||
+      s.categories.name.toLowerCase().includes(searchValue)
+    )
+  ).sort((a, b) => {
+    // Tri par pertinence : titre > message > catégorie
+    const aTitleMatch = a.titre.toLowerCase().includes(searchValue);
+    const bTitleMatch = b.titre.toLowerCase().includes(searchValue);
+    if (aTitleMatch && !bTitleMatch) return -1;
+    if (!aTitleMatch && bTitleMatch) return 1;
+    return b.date - a.date; // Sinon, plus récent en premier
+  });
+
   if (matchingForums.length === 0) {
-    alert('Aucun forum privé trouvé avec ce titre.');
-  } else if (matchingForums.length === 1) {
-    window.location.href = `discussion.html?id=${matchingForums[0].id}`;
+    resultsDiv.innerHTML = '<p class="text-gray-600 text-sm">Aucun forum trouvé.</p>';
   } else {
-    const resultDiv = document.createElement('div');
-    resultDiv.className = 'fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center';
-    resultDiv.innerHTML = `
-      <div class="bg-white p-4 rounded shadow max-h-[80vh] overflow-y-auto">
-        <h3 class="font-semibold mb-2">Forums privés trouvés :</h3>
-        <ul class="space-y-2">
-          ${matchingForums.map(f => `
-            <li>
-              <a href="discussion.html?id=${f.id}" class="text-blue-500 hover:underline">
-                ${f.titre} (${f.category}, créé le ${new Date(f.date).toLocaleDateString('fr-FR')})
-              </a>
-            </li>
-          `).join('')}
-        </ul>
-        <button class="mt-4 bg-red-500 text-white p-2 rounded" onclick="this.parentElement.parentElement.remove()">Fermer</button>
-      </div>
+    resultsDiv.innerHTML = `
+      <h3 class="font-semibold mb-2 text-sm sm:text-base">Résultats (${matchingForums.length}) :</h3>
+      <ul class="space-y-2">
+        ${matchingForums.slice(0, 10).map(f => `
+          <li class="border-b border-gray-100 pb-2">
+            <a href="discussion.html?id=${f.id}" class="text-blue-500 hover:underline flex items-center">
+              ${f.titre}
+              ${f.isPrivate ? '<i data-feather="lock" class="ml-2 h-4 w-4 text-gray-500"></i>' : ''}
+            </a>
+            <p class="text-sm text-gray-600">${f.categories.name}</p>
+            <p class="text-xs text-gray-500">Par ${f.pseudo} - ${new Date(f.date).toLocaleDateString('fr-FR')}</p>
+          </li>
+        `).join('')}
+        ${matchingForums.length > 10 ? '<p class="text-sm text-gray-500 mt-2">+ ' + (matchingForums.length - 10) + ' autres résultats...</p>' : ''}
+      </ul>
     `;
-    document.body.appendChild(resultDiv);
   }
+  resultsDiv.classList.remove('hidden', 'scale-y-95', 'opacity-0');
+  resultsDiv.classList.add('scale-y-100', 'opacity-100');
+  feather.replace(); // Rafraîchir les icônes Feather
+});
+
+document.getElementById('clearSearch').addEventListener('click', () => {
+  document.getElementById('searchForum').value = '';
+  document.getElementById('searchResults').classList.add('hidden');
+});
+
+// Bouton de recherche (optionnel, car temps réel)
+document.getElementById('searchForumBtn').addEventListener('click', () => {
+  const searchInput = document.getElementById('searchForum');
+  searchInput.dispatchEvent(new Event('input')); // Simule une saisie pour déclencher la recherche
 });
 
 //écouteur pour afficher/masquer le champ personnalisé

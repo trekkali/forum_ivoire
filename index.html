@@ -66,16 +66,25 @@
       <span class="hidden sm:inline font-medium">Créer un Forum</span>
     </button>
 
-    <!-- Barre de recherche pour forums privés -->
-    <div class="mb-6 flex items-center bg-white p-2 sm:p-3 rounded-xl shadow-sm border border-gray-100 w-full">
-      <i data-feather="key" class="text-gray-400 mr-2 h-4 w-4 sm:h-5 sm:w-5"></i>
-      <input type="text" id="searchPrivateForum" placeholder="Entrer le titre d'un forum privé" 
-        class="border-none p-2 rounded w-full focus:outline-none focus:ring-0 bg-transparent text-sm sm:text-base"
-        autocomplete="off">
-      <button id="searchPrivateBtn" class="bg-primary-500 text-white p-2 rounded-lg hover:bg-primary-600 transition-colors flex items-center">
-        <i data-feather="search" class="h-4 w-4 sm:h-5 sm:w-5"></i>
-      </button>
+    <!-- Barre de recherche -->
+    <div class="mb-6 flex flex-col gap-2">
+      <div class="flex items-center bg-white p-2 sm:p-3 rounded-xl shadow-sm border border-gray-100 w-full">
+        <i data-feather="search" class="text-gray-400 mr-2 h-4 w-4 sm:h-5 sm:w-5"></i>
+        <input type="text" id="searchForum" placeholder="Rechercher un forum..." 
+          class="border-none p-2 rounded w-full focus:outline-none focus:ring-0 bg-transparent text-sm sm:text-base" autocomplete="off">
+          <button id="clearSearch" class="hidden text-gray-400 hover:text-gray-600 mx-2"><i data-feather="x" class="h-4 w-4"></i></button>
+          <button id="searchForumBtn" class="bg-primary-500 text-white p-2 rounded-lg hover:bg-primary-600 transition-colors flex items-center">
+          <i data-feather="search" class="h-4 w-4 sm:h-5 sm:w-5"></i>
+        </button>
+      </div>
+      <label class="flex items-center text-sm text-gray-600">
+        <input type="checkbox" id="privateOnly" class="w-4 h-4 text-primary-600 rounded focus:ring-primary-500 mr-2">
+        Privés uniquement
+      </label>
     </div>
+
+    <!-- Zone des résultats -->
+    <div id="searchResults" class="hidden bg-white p-4 rounded-xl shadow-sm border border-gray-100 mt-2 max-h-96 overflow-y-auto transition-all duration-300 ease-in-out transform"></div>
 
     <!-- Popup Formulaire Création -->
     <div id="createForumPopup" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-30 hidden">
