@@ -49,64 +49,6 @@ Ton raisonnement est tout à fait pertinent ! Avec une plateforme comme "Parole 
 1. **Ajouter un champ `last_activity`** :
    - Dans `subjects`, ajoute une colonne `last_activity` (type `bigint`) pour suivre la date de la dernière réponse ou création.
    - Initialise avec `date` lors de la création :
-     ```javascript
-     const subject = {
-       id: subjectId,
-       titre,
-       message,
-       pseudo,
-       date: Date.now(),
-       last_activity: Date.now(), // Ajout ici
-       replyCount: 0,
-       participantcount: 0,
-       isPrivate,
-       password: isPrivate ? password : null,
-     };
-     ```
-
-2. **Mettre à jour `last_activity`** :
-   - Trigger SQL pour actualiser `last_activity` à chaque nouvelle réponse :
-```sql
-CREATE OR REPLACE FUNCTION update_last_activity()
-RETURNS TRIGGER AS $$
-BEGIN
-  UPDATE subjects
-  SET last_activity = NEW.date
-  WHERE id = NEW.subjectid;
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER update_subject_activity
-AFTER INSERT ON replies
-FOR EACH ROW
-EXECUTE FUNCTION update_last_activity();
-```
-
-3. **Script de suppression automatique** :
-   - Crée une fonction SQL exécutée périodiquement (ex. via un cron job ou Supabase Edge Function) :
-```sql
-CREATE OR REPLACE FUNCTION delete_inactive_subjects()
-RETURNS void AS $$
-BEGIN
-  DELETE FROM subjects
-  WHERE last_activity < EXTRACT(EPOCH FROM NOW() - INTERVAL '7 days') * 1000
-  AND isPrivate = false; -- Optionnel : ne supprimer que les publics
-END;
-$$ LANGUAGE plpgsql;
-
--- Exécuter manuellement pour tester
-SELECT delete_inactive_subjects();
-```
-
-- **Planification** :
-  - Utilise une Edge Function Supabase avec un cron (ex. via `cron` sur un serveur ou un service comme Vercel Cron) :
-    ```javascript
-    Deno.cron('Delete inactive subjects', '0 0 * * *', async () => {
-      await supabase.rpc('delete_inactive_subjects');
-    });
-    ```
-
 ---
 
 ### 3. Optimisation de l’affichage des réponses
@@ -120,34 +62,6 @@ SELECT delete_inactive_subjects();
 
 #### Mise en œuvre (Pagination simple)
 Dans `discussion.html` :
-```javascript
-let offset = 0;
-const limit = 50;
-
-async function loadReplies() {
-  const { data: replies } = await supabase
-    .from('replies')
-    .select('*')
-    .eq('subjectid', subjectId)
-    .order('date', { ascending: false })
-    .range(offset, offset + limit - 1);
-  
-  document.getElementById('replies').innerHTML += replies.map(r => `
-    <div>${r.texte} - ${r.pseudo} (${new Date(r.date).toLocaleString()})</div>
-  `).join('');
-  
-  offset += limit;
-  if (replies.length < limit) document.getElementById('loadMore').classList.add('hidden');
-}
-
-document.getElementById('loadMore').addEventListener('click', loadReplies);
-loadReplies(); // Chargement initial
-```
-
-```html
-<div id="replies"></div>
-<button id="loadMore">Charger plus</button>
-```
 
 ---
 
