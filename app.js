@@ -1,37 +1,58 @@
+// Import des dépendances depuis CDN
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.44.0/+esm';
 import { v4 as uuidv4 } from 'https://cdn.jsdelivr.net/npm/uuid@latest/+esm';
 
-console.log('app.js démarré');
+// Initialisation du client Supabase
 const supabase = createClient(
   'https://auiimdeorutwndunxrcr.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF1aWltZGVvcnV0d25kdW54cmNyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIyNDI4MjgsImV4cCI6MjA1NzgxODgyOH0.A2VfxrLNjDQMTi5mMCdp-ppf-quDsM4OW-pL5p2QbQM'
 );
 
+console.log('app.js démarré');
+
+// Variable globale pour stocker tous les sujets chargés
 let allSubjects = [];
 
-// Charger les sujets avec la fonction SQL
+// Fonction pour nettoyer les forums inactifs depuis plus de 7 jours
+async function cleanInactiveSubjects() {
+  try {
+    const { data, error } = await supabase.rpc('delete_inactive_subjects');
+    if (error) {
+      console.error('Erreur lors de la suppression des forums inactifs:', error);
+    } else if (data && data.length > 0) {
+      console.log('Forums supprimés:', data);
+      data.forEach(subject => {
+        console.log(`Sujet "${subject.deleted_title}" (ID: ${subject.deleted_id}) supprimé avec ses réponses`);
+      });
+      // Recharger les sujets après suppression pour mettre à jour l'affichage
+      loadSubjects();
+    } else {
+      console.log('Aucun forum inactif à supprimer');
+    }
+  } catch (err) {
+    console.error('Erreur inattendue:', err);
+  }
+}
+
+// Charger les sujets avec la fonction SQL et gérer l'affichage
 async function loadSubjects() {
   console.log('Chargement des sujets...');
 
-  // Étape 1 : Charger les sujets tendances via la fonction SQL
-  const { data: trendingSubjects, error } = await supabase
-    .rpc('get_trending_subjects', { recent_hours: 24 });
+  // Charger les sujets tendances via la fonction SQL
+  const { data: trendingSubjects, error } = await supabase.rpc('get_trending_subjects', { recent_hours: 24 });
   if (error) {
-    console.error('Erreur chargement sujets tendances :', error);
+    console.error('Erreur chargement sujets tendances:', error);
     return;
   }
 
-  console.log('Sujets chargés avec scores :', trendingSubjects);
+  console.log('Sujets chargés avec scores:', trendingSubjects);
   allSubjects = trendingSubjects;
 
-  // Étape 2 : Filtrer les 10 premiers forums publics tendances
-  const trending = trendingSubjects
-    .filter(s => !s.is_private) // Forums publics uniquement
-    .slice(0, 10); // Top 10
+  // Filtrer les 10 premiers forums publics tendances
+  const trending = trendingSubjects.filter(s => !s.is_private).slice(0, 10);
 
-  // Étape 3 : Afficher les tendances avec icônes 🔥
+  // Afficher les tendances avec icônes 🔥
   document.getElementById('trending').innerHTML = trending.map(s => {
-    // Nombre d'icônes 🔥 basé sur recent_replies (1 à 5)
     const fireCount = Math.min(Math.max(Math.floor(s.recent_replies / 2), 1), 5);
     const fireIcons = '🔥'.repeat(fireCount);
     return `
@@ -44,25 +65,27 @@ async function loadSubjects() {
     `;
   }).join('');
 
-  // Étape 4 : Affichage des catégories
+  // Afficher les catégories dynamiques
   const categories = [...new Set(trendingSubjects.filter(s => !s.is_private).map(s => s.category_name))];
-  document.getElementById('categories').innerHTML = `<button class="bg-gray-200 dark:bg-gray-600 p-2 rounded hover:bg-gray-300 dark:hover:bg-gray-500 text-gray-800 dark:text-gray-200" onclick="filterByCategory('all')">Toutes</button>` + 
-    categories.map(cat => `<button class="bg-gray-200 dark:bg-gray-600 p-2 rounded hover:bg-gray-300 dark:hover:bg-gray-500 text-gray-800 dark:text-gray-200" onclick="filterByCategory('${cat}')">${cat}</button>`).join('');
+  document.getElementById('categories').innerHTML = `
+    <button class="bg-gray-200 dark:bg-gray-600 p-2 rounded hover:bg-gray-300 dark:hover:bg-gray-500 text-gray-800 dark:text-gray-200" onclick="filterByCategory('all')">Toutes</button>
+    ${categories.map(cat => `<button class="bg-gray-200 dark:bg-gray-600 p-2 rounded hover:bg-gray-300 dark:hover:bg-gray-500 text-gray-800 dark:text-gray-200" onclick="filterByCategory('${cat}')">${cat}</button>`).join('')}
+  `;
 
-  // Étape 5 : Affichage des forums récents
+  // Afficher les forums récents
   renderForums(trendingSubjects.filter(s => !s.is_private));
 }
 
-// Rendu des forums
+// Rendu des forums dans l'interface
 function renderForums(subjects) {
-  console.log('Rendu des forums :', subjects);
+  console.log('Rendu des forums:', subjects);
   document.getElementById('forums').innerHTML = subjects.map(s => `
     <div class="bg-white dark:bg-gray-700 p-4 rounded shadow hover:shadow-lg transition-shadow">
       <h3 class="font-semibold text-gray-800 dark:text-gray-200">${s.titre} <span class="text-sm text-gray-500 dark:text-gray-400">(${s.category_name})</span></h3>
       <p class="text-sm text-gray-600 dark:text-gray-300">${s.message.substring(0, 100)}...</p>
       ${s.fileUrl ? `<a href="${s.fileUrl}" target="_blank" class="text-blue-500 underline">Fichier</a>` : ''}
       <p class="text-sm text-gray-500 dark:text-gray-400">Par ${s.pseudo} - ${new Date(s.date).toLocaleString('fr-FR')}</p>
-      <p class="text-sm text-gray-500 dark:text-gray-400">Réponses : ${s.total_replies || 0} | Participants : ${s.participantcount || 0}</p>
+      <p class="text-sm text-gray-500 dark:text-gray-400">Réponses: ${s.total_replies || 0} | Participants: ${s.participantcount || 0}</p>
       <div class="flex space-x-2 mt-2">
         <a href="discussion.html?id=${s.id}" class="text-blue-500 hover:underline">Discuter</a>
         <button class="text-primary-500 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 transition share-btn" data-id="${s.id}">
@@ -77,14 +100,14 @@ function renderForums(subjects) {
   feather.replace();
 }
 
-// Filtrer par catégorie
+// Filtrer les forums par catégorie
 window.filterByCategory = (category) => {
-  console.log('Filtrage par catégorie :', category);
+  console.log('Filtrage par catégorie:', category);
   if (category === 'all') renderForums(allSubjects.filter(s => !s.is_private));
   else renderForums(allSubjects.filter(s => s.category_name === category && !s.is_private));
 };
 
-// Charger les catégories officielles
+// Charger les catégories officielles pour le formulaire
 async function loadCategories() {
   const { data, error } = await supabase
     .from('categories')
@@ -92,7 +115,7 @@ async function loadCategories() {
     .eq('is_official', true)
     .order('name');
   if (error) {
-    console.error('Erreur chargement catégories :', error);
+    console.error('Erreur chargement catégories:', error);
     return;
   }
   const categorySelect = document.getElementById('category');
@@ -101,7 +124,40 @@ async function loadCategories() {
     '<option value="other">Autre</option>';
 }
 
-// Gestion du popup de création
+// Ajouter une réponse et mettre à jour last_activity
+async function addReply(subjectId, content, pseudo = 'Anonyme') {
+  const now = Date.now();
+  const reply = {
+    id: uuidv4(),
+    subjectid: subjectId,
+    pseudo,
+    texte: content,
+    date: now,
+    replyingTo: null
+  };
+
+  // Insérer la réponse dans la table replies
+  const { error: replyError } = await supabase.from('replies').insert(reply);
+  if (replyError) {
+    console.error('Erreur ajout réponse:', replyError);
+    return false;
+  }
+
+  // Mettre à jour last_activity du sujet
+  const { error: updateError } = await supabase
+    .from('subjects')
+    .update({ last_activity: now })
+    .eq('id', subjectId);
+  if (updateError) {
+    console.error('Erreur mise à jour last_activity:', updateError);
+    return false;
+  }
+
+  console.log('Réponse ajoutée et sujet mis à jour');
+  return true;
+}
+
+// Gestion du popup et création de forum
 const createBtn = document.getElementById('createForumBtn');
 const createPopup = document.getElementById('createForumPopup');
 const createForm = document.getElementById('createForm');
@@ -141,11 +197,7 @@ createForm.addEventListener('submit', async (e) => {
     return;
   }
 
-  const { data: existingSubject } = await supabase
-    .from('subjects')
-    .select('id')
-    .eq('titre', titre)
-    .single();
+  const { data: existingSubject } = await supabase.from('subjects').select('id').eq('titre', titre).single();
   if (existingSubject) {
     alert('Ce titre existe déjà. Veuillez choisir un titre unique.');
     return;
@@ -158,6 +210,7 @@ createForm.addEventListener('submit', async (e) => {
     message: createForm.message.value.trim(),
     pseudo,
     date: Date.now(),
+    last_activity: Date.now(),
     replyCount: 0,
     participantcount: 0,
     isPrivate,
@@ -169,29 +222,15 @@ createForm.addEventListener('submit', async (e) => {
       alert('Veuillez proposer une catégorie.');
       return;
     }
-    const { data: diversCat } = await supabase
-      .from('categories')
-      .select('id')
-      .eq('name', 'Divers')
-      .single();
+    const { data: diversCat } = await supabase.from('categories').select('id').eq('name', 'Divers').single();
     subject.category_id = diversCat.id;
     subject.suggested_category = customCategory;
 
-    const { data: existingSuggestion } = await supabase
-      .from('category_suggestions')
-      .select('*')
-      .eq('name', customCategory)
-      .single();
-
+    const { data: existingSuggestion } = await supabase.from('category_suggestions').select('*').eq('name', customCategory).single();
     if (existingSuggestion) {
-      await supabase
-        .from('category_suggestions')
-        .update({ proposal_count: existingSuggestion.proposal_count + 1 })
-        .eq('id', existingSuggestion.id);
+      await supabase.from('category_suggestions').update({ proposal_count: existingSuggestion.proposal_count + 1 }).eq('id', existingSuggestion.id);
     } else {
-      await supabase
-        .from('category_suggestions')
-        .insert({ name: customCategory, proposed_by: pseudo });
+      await supabase.from('category_suggestions').insert({ name: customCategory, proposed_by: pseudo });
     }
     await validateSuggestions();
   } else {
@@ -205,23 +244,15 @@ createForm.addEventListener('submit', async (e) => {
 
   const { data: subjectData, error: subjectError } = await supabase.from('subjects').insert(subject).select();
   if (subjectError) {
-    console.error('Erreur insertion sujet :', subjectError);
-    alert('Erreur création forum : ' + subjectError.message);
+    console.error('Erreur insertion sujet:', subjectError);
+    alert('Erreur création forum: ' + subjectError.message);
     return;
   }
 
-  const initialReply = {
-    id: uuidv4(),
-    subjectid: subjectId,
-    pseudo,
-    texte: createForm.message.value.trim(),
-    date: Date.now(),
-    replyingTo: null
-  };
-  const { error: replyError } = await supabase.from('replies').insert(initialReply);
-  if (replyError) {
-    console.error('Erreur insertion réponse :', replyError);
-    alert('Erreur message initial : ' + replyError.message);
+  // Ajouter le message initial comme réponse via addReply
+  const replySuccess = await addReply(subjectId, createForm.message.value.trim(), pseudo);
+  if (!replySuccess) {
+    alert('Erreur ajout message initial.');
     return;
   }
 
@@ -232,48 +263,27 @@ createForm.addEventListener('submit', async (e) => {
   loadSubjects();
 });
 
-// Validation des suggestions
+// Validation des suggestions de catégories
 async function validateSuggestions() {
   const THRESHOLD = 5;
-  const { data: suggestions } = await supabase
-    .from('category_suggestions')
-    .select('*')
-    .gte('proposal_count', THRESHOLD);
-
+  const { data: suggestions } = await supabase.from('category_suggestions').select('*').gte('proposal_count', THRESHOLD);
   for (const suggestion of suggestions) {
-    const { data: existingCategory } = await supabase
-      .from('categories')
-      .select('id')
-      .eq('name', suggestion.name)
-      .single();
-
+    const { data: existingCategory } = await supabase.from('categories').select('id').eq('name', suggestion.name).single();
     let categoryId;
     if (!existingCategory) {
-      const { data: newCategory } = await supabase
-        .from('categories')
-        .insert({ name: suggestion.name })
-        .select()
-        .single();
+      const { data: newCategory } = await supabase.from('categories').insert({ name: suggestion.name }).select().single();
       categoryId = newCategory.id;
     } else {
       categoryId = existingCategory.id;
     }
-
-    await supabase
-      .from('subjects')
-      .update({ category_id: categoryId, suggested_category: null })
-      .eq('suggested_category', suggestion.name);
-
-    await supabase
-      .from('category_suggestions')
-      .delete()
-      .eq('id', suggestion.id);
+    await supabase.from('subjects').update({ category_id: categoryId, suggested_category: null }).eq('suggested_category', suggestion.name);
+    await supabase.from('category_suggestions').delete().eq('id', suggestion.id);
   }
   console.log('Suggestion envoyée ! Elle sera validée après 5 propositions.');
   loadCategories();
 }
 
-// Recherche en temps réel
+// Gestion de la recherche en temps réel
 document.getElementById('searchForum').addEventListener('input', (e) => {
   document.getElementById('clearSearch').classList.toggle('hidden', !e.target.value);
   const searchValue = e.target.value.trim().toLowerCase();
@@ -287,7 +297,7 @@ document.getElementById('searchForum').addEventListener('input', (e) => {
     return;
   }
 
-  const matchingForums = allSubjects.filter(s => 
+  const matchingForums = allSubjects.filter(s =>
     (privateOnly ? s.is_private : true) && (
       s.titre.toLowerCase().includes(searchValue) ||
       s.message.toLowerCase().includes(searchValue) ||
@@ -326,14 +336,14 @@ document.getElementById('searchForum').addEventListener('input', (e) => {
   feather.replace();
 });
 
+// Gestion des boutons de recherche et de réinitialisation
 document.getElementById('clearSearch').addEventListener('click', () => {
   document.getElementById('searchForum').value = '';
   document.getElementById('searchResults').classList.add('hidden');
 });
 
 document.getElementById('searchForumBtn').addEventListener('click', () => {
-  const searchInput = document.getElementById('searchForum');
-  searchInput.dispatchEvent(new Event('input'));
+  document.getElementById('searchForum').dispatchEvent(new Event('input'));
 });
 
 document.getElementById('category').addEventListener('change', (e) => {
@@ -348,23 +358,21 @@ document.addEventListener('click', (e) => {
     const forumId = e.target.getAttribute('data-id');
     const shareUrl = `${window.location.origin}/discussion.html?id=${forumId}`;
     if (navigator.share) {
-      navigator.share({
-        title: 'Partage de forum Parole d\'Ivoire',
-        url: shareUrl
-      }).then(() => console.log('Partagé avec succès'))
-        .catch(err => console.error('Erreur de partage :', err));
+      navigator.share({ title: 'Partage de forum Parole d\'Ivoire', url: shareUrl })
+        .then(() => console.log('Partagé avec succès'))
+        .catch(err => console.error('Erreur de partage:', err));
     } else {
-      alert('Partage non pris en charge. Copiez le lien manuellement : ' + shareUrl);
+      alert('Partage non pris en charge. Copiez le lien manuellement: ' + shareUrl);
     }
   } else if (e.target.classList.contains('copy-btn')) {
     const forumId = e.target.getAttribute('data-id');
     const copyUrl = `${window.location.origin}/discussion.html?id=${forumId}`;
     navigator.clipboard.writeText(copyUrl).then(() => {
       alert('Lien copié dans le presse-papiers !');
-      console.log('Lien copié :', copyUrl);
+      console.log('Lien copié:', copyUrl);
     }).catch(err => {
       alert('Erreur lors de la copie du lien.');
-      console.log('Erreur copie :', err);
+      console.log('Erreur copie:', err);
     });
   }
 });
@@ -385,11 +393,13 @@ document.addEventListener('DOMContentLoaded', () => {
     feather.replace();
   });
 
-  loadCategories();
-  loadSubjects();
+  // Lancer les fonctions initiales au chargement
+  cleanInactiveSubjects(); // Nettoyage des forums inactifs
+  loadCategories();        // Chargement des catégories
+  loadSubjects();          // Chargement des sujets
 });
 
-// Mise à jour dynamique avec Supabase Realtime
+// Mise à jour en temps réel avec Supabase Realtime
 supabase
   .channel('replies_changes')
   .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'replies' }, () => {

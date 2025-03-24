@@ -115,8 +115,10 @@
   <main class="flex-grow pt-20 pb-24 px-4">
     <div class="max-w-3xl mx-auto bg-white rounded-lg shadow-md overflow-hidden">
       <!-- Zone des messages -->
-      <div id="messages" class="p-4 bg-gray-50"></div>
-     
+      <div id="messages" class="p-4 bg-gray-50">
+        <div id="replies"></div> <!-- Nouveau conteneur pour les réponses -->
+        <button id="loadMore" class="mt-4 px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition hidden">Charger plus</button>
+      </div>
       <!-- Formulaire de réponse -->
       <div class="p-4 bg-white border-t border-gray-200">
         <form id="messageForm" class="space-y-3">
