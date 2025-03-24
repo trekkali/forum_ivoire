@@ -1,68 +1,71 @@
-# Liee au dernier commit que j'ai poster
-
-#### Points que j'ai soulevés
-1. **Recherche limitée aux forums privés** : Tu veux que la barre serve à tout, pas seulement aux privés.
-2. **Recherche par titre exact** : Trop restrictif, et les titres similaires/identiques posent problème.
-3. **Redirection directe** : Tu préfères un affichage avec suggestions pour choisir.
-4. **Unicité des titres** : Vérifier les doublons à la création et utiliser le titre comme ID unique.
+logique pour définir les forums "Tendances" dans "Parole d'Ivoire" en utilisant le score combiné : 
+- 50% pour le nombre total de réponses (`replyCount`),
+- 30% pour les réponses récentes (dernières 24h),
+- 20% pour le nombre de participants uniques.
 
 ---
 
-### Bonnes pratiques et recommandations
+### Plan de mise en œuvre
 
-#### 1. Étendre la recherche à tous les forums
-- **Pratique** : Une barre de recherche doit être polyvalente et chercher dans tous les forums (publics et privés), avec éventuellement un filtre optionnel (ex. toggle "Privé uniquement").
-- **Recommandation** :
-  - Supprime la restriction `s.isPrivate` dans le filtre.
-  - Ajoute un checkbox ou une icône pour filtrer les privés si besoin.
-  - Met à jour le placeholder pour refléter cette généralité (ex. "Rechercher un forum...").
+#### Objectifs
+1. Charger les données nécessaires (`subjects` et `replies`) depuis Supabase.
+2. Calculer les métriques pour chaque forum : total des réponses, réponses récentes, participants uniques.
+3. Appliquer le score hybride et trier les forums.
+4. Afficher les 5 forums publics les plus "tendances" dans la section "Tendances".
+5. Tester et ajuster si besoin.
 
-#### 2. Recherche plus flexible (suggestions partielles)
-- **Pratique** : Utiliser une recherche par sous-chaîne (`.includes()`) ou une recherche floue pour capter les titres similaires, pas seulement exacts.
-- **Recommandation** :
-  - Remplace `===` par `.includes()` pour trouver des correspondances partielles.
-  - Ajoute une recherche dans d’autres champs (ex. `message`, `categories.name`) pour plus de pertinence.
-  - Trie les résultats par pertinence (ex. titre > message > catégorie).
+#### Étapes détaillées
+1. **Récupérer les données** :
+   - Charger tous les sujets (`subjects`) avec leurs catégories.
+   - Charger toutes les réponses (`replies`) pour analyser l’activité.
 
-#### 3. Affichage des résultats
-- **Pratique** : Au lieu de rediriger directement, affiche toujours une liste de suggestions dans un popup ou une section dédiée, même pour un seul résultat.
-- **Recommandation** :
-  - Crée un popup ou une zone sous la barre avec tous les résultats correspondants.
-  - Inclue des détails (titre, catégorie, date, privé/public) pour aider l’utilisateur à choisir.
-  - Ajoute une limite (ex. 10 résultats max) avec un message si trop de correspondances.
+2. **Calculer les métriques** :
+   - Pour chaque sujet, compter :
+     - Total des réponses (longueur du tableau filtré des `replies`).
+     - Réponses récentes (filtrer les `replies` des dernières 24h).
+     - Participants uniques (ensemble des pseudos distincts dans `replies`).
 
-#### 4. Unicité des titres
-- **Pratique** : Vérifier les doublons lors de la création pour éviter la confusion dans la recherche et l’identification.
-- **Recommandation** :
-  - Avant insertion dans `subjects`, vérifie si le titre existe déjà via une requête Supabase.
-  - Si doublon, suggère une modification (ex. "Titre (2)") ou bloque la création avec un message.
-  - **Attention** : Utiliser le titre comme `id` n’est pas idéal, car :
-    - Les IDs doivent être uniques et immuables (UUID est parfait pour ça).
-    - Les titres peuvent être longs ou contenir des caractères spéciaux, ce qui complique leur usage comme clé.
-    - **Alternative** : Garde `uuidv4()` pour `id`, mais impose l’unicité du titre.
+3. **Calculer le score hybride** :
+   - Formule : `trendScore = (totalReplies * 0.5) + (recentReplies * 0.3) + (uniqueParticipants * 0.2)`.
+   - Ajouter ce score à chaque objet `subject`.
+
+4. **Filtrer et trier** :
+   - Garder les forums publics (`!isPrivate`) avec un `trendScore > 5`.
+   - Trier par score décroissant et limiter à 5.
+
+5. **Mettre à jour l’affichage** :
+   - Adapter le rendu HTML pour refléter ce nouveau critère.
 
 ---
 
-### Mise en œuvre et intégration dans le projet :
+### Explications détaillées
 
-- Une recherche polyvalente (publics et privés) avec un filtre "Privés uniquement".
-- Une recherche flexible avec suggestions partielles.
-- Un affichage des résultats en temps réel sous la barre de recherche.
-- L’unicité des titres vérifiée à la création.
-- Une animation Tailwind pour l’apparition des résultats.
-- Des détails dans les résultats : titre, catégorie, pseudo du créateur, date de création, et un cadenas pour indiquer si le forum est privé.
+1. **Chargement des données** :
+   - On utilise deux requêtes Supabase :
+     - `subjects` : Tous les forums avec leurs catégories.
+     - `replies` : Toutes les réponses avec `subjectid`, `pseudo`, et `date`.
 
-----
+2. **Calcul des métriques** :
+   - `totalReplies` : Nombre total de réponses pour un forum.
+   - `recentReplies` : Nombre de réponses dans les dernières 24h (comparaison entre `now` et `r.date`).
+   - `uniqueParticipants` : Utilisation de `Set` pour compter les pseudos distincts.
+
+3. **Score hybride** :
+   - Formule : `(totalReplies * 0.5) + (recentReplies * 0.3) + (uniqueParticipants * 0.2)`.
+   - Exemple :
+     - Forum A : 10 réponses totales, 2 récentes, 3 participants → Score = `(10 * 0.5) + (2 * 0.3) + (3 * 0.2) = 5 + 0.6 + 0.6 = 6.2`.
+     - Forum B : 5 réponses totales, 4 récentes, 2 participants → Score = `(5 * 0.5) + (4 * 0.3) + (2 * 0.2) = 2.5 + 1.2 + 0.4 = 4.1`.
+
+4. **Filtrage et tri** :
+   - `trendScore > 5` : Seuil minimal pour être "tendance" (ajustable selon tes tests).
+   - `!s.isPrivate` : Seulement les forums publics.
+   - `.sort()` par score décroissant, puis `.slice(0, 5)` pour limiter à 5.
+
+---
+
 ### Résultat attendu
-1. **Recherche améliorée** :
-   - Cherche dans tous les forums (publics et privés) par titre, message, ou catégorie.
-   - Affiche une liste de résultats sous la barre avec des détails (titre, extrait, catégorie, etc.).
-   - Limite à 10 résultats avec un indicateur si plus.
-2. **Unicité des titres** :
-   - Vérifie les doublons avant création et bloque si nécessaire.
-   - Garde `uuidv4()` comme `id` pour éviter les problèmes d’encodage ou de longueur.
-
----
-
-### Conclusion
-Ces changements rendent la recherche plus puissante, intuitive et adaptée à une base de forums croissante. L’unicité des titres évite la confusion, et l’affichage des résultats donne plus de contrôle à l’utilisateur.
+- La section "Tendances" affiche jusqu’à 5 forums publics avec les scores les plus élevés.
+- Les forums actifs récemment (ex. beaucoup de `recentReplies`) et avec plusieurs participants montent en haut.
+- Exemple d’affichage :
+  - "News Live" : Score 4.5 (Réponses: 3, Récents: 3, Participants: 3).
+  - "Culture Pop" : Score 6.8 (Réponses: 10, Récents: 0, Participants: 4).

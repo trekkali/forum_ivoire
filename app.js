@@ -9,50 +9,66 @@ const supabase = createClient(
 
 let allSubjects = [];
 
+// Charger les sujets avec la fonction SQL
 async function loadSubjects() {
   console.log('Chargement des sujets...');
-  const { data, error } = await supabase
-    .from('subjects')
-    .select('*, categories(name)')
-    .order('date', { ascending: false });
+
+  // Étape 1 : Charger les sujets tendances via la fonction SQL
+  const { data: trendingSubjects, error } = await supabase
+    .rpc('get_trending_subjects', { recent_hours: 24 });
   if (error) {
-    console.error('Erreur chargement sujets :', error);
+    console.error('Erreur chargement sujets tendances :', error);
     return;
   }
-  console.log('Sujets chargés :', data);
-  allSubjects = data;
 
-  const trending = data.filter(s => (s.replyCount > 2) && !s.isPrivate);
-  document.getElementById('trending').innerHTML = trending.map(s => `
-    <div class="bg-white p-4 rounded shadow min-w-[250px]">
-      <h3 class="font-semibold">${s.titre} <span class="text-sm text-gray-500">(${s.categories.name})</span></h3>
-      <p class="text-sm text-gray-600">${s.message.substring(0, 50)}...</p>
-      <a href="discussion.html?id=${s.id}" class="text-blue-500 hover:underline">Voir</a>
-    </div>
-  `).join('');
+  console.log('Sujets chargés avec scores :', trendingSubjects);
+  allSubjects = trendingSubjects;
 
-  const categories = [...new Set(data.filter(s => !s.isPrivate).map(s => s.categories.name))];
-  document.getElementById('categories').innerHTML = `<button class="bg-gray-200 p-2 rounded hover:bg-gray-300" onclick="filterByCategory('all')">Toutes</button>` + 
-    categories.map(cat => `<button class="bg-gray-200 p-2 rounded hover:bg-gray-300" onclick="filterByCategory('${cat}')">${cat}</button>`).join('');
+  // Étape 2 : Filtrer les 10 premiers forums publics tendances
+  const trending = trendingSubjects
+    .filter(s => !s.is_private) // Forums publics uniquement
+    .slice(0, 10); // Top 10
 
-  renderForums(data.filter(s => !s.isPrivate));
+  // Étape 3 : Afficher les tendances avec icônes 🔥
+  document.getElementById('trending').innerHTML = trending.map(s => {
+    // Nombre d'icônes 🔥 basé sur recent_replies (1 à 5)
+    const fireCount = Math.min(Math.max(Math.floor(s.recent_replies / 2), 1), 5);
+    const fireIcons = '🔥'.repeat(fireCount);
+    return `
+      <div class="bg-white dark:bg-gray-700 p-4 rounded shadow min-w-[250px] snap-start">
+        <h3 class="font-semibold text-gray-800 dark:text-gray-200">${s.titre} <span class="text-sm text-gray-500 dark:text-gray-400">(${s.category_name})</span></h3>
+        <p class="text-sm text-gray-600 dark:text-gray-300">${s.message.substring(0, 50)}...</p>
+        <p class="text-xs text-gray-500 dark:text-gray-400">Score: ${s.trend_score} ${fireIcons}</p>
+        <a href="discussion.html?id=${s.id}" class="text-blue-500 hover:underline">Voir</a>
+      </div>
+    `;
+  }).join('');
+
+  // Étape 4 : Affichage des catégories
+  const categories = [...new Set(trendingSubjects.filter(s => !s.is_private).map(s => s.category_name))];
+  document.getElementById('categories').innerHTML = `<button class="bg-gray-200 dark:bg-gray-600 p-2 rounded hover:bg-gray-300 dark:hover:bg-gray-500 text-gray-800 dark:text-gray-200" onclick="filterByCategory('all')">Toutes</button>` + 
+    categories.map(cat => `<button class="bg-gray-200 dark:bg-gray-600 p-2 rounded hover:bg-gray-300 dark:hover:bg-gray-500 text-gray-800 dark:text-gray-200" onclick="filterByCategory('${cat}')">${cat}</button>`).join('');
+
+  // Étape 5 : Affichage des forums récents
+  renderForums(trendingSubjects.filter(s => !s.is_private));
 }
 
+// Rendu des forums
 function renderForums(subjects) {
   console.log('Rendu des forums :', subjects);
   document.getElementById('forums').innerHTML = subjects.map(s => `
-    <div class="bg-white p-4 rounded shadow hover:shadow-lg transition-shadow">
-      <h3 class="font-semibold">${s.titre} <span class="text-sm text-gray-500">(${s.categories.name})</span></h3>
-      <p class="text-sm text-gray-600">${s.message.substring(0, 100)}...</p>
+    <div class="bg-white dark:bg-gray-700 p-4 rounded shadow hover:shadow-lg transition-shadow">
+      <h3 class="font-semibold text-gray-800 dark:text-gray-200">${s.titre} <span class="text-sm text-gray-500 dark:text-gray-400">(${s.category_name})</span></h3>
+      <p class="text-sm text-gray-600 dark:text-gray-300">${s.message.substring(0, 100)}...</p>
       ${s.fileUrl ? `<a href="${s.fileUrl}" target="_blank" class="text-blue-500 underline">Fichier</a>` : ''}
-      <p class="text-sm text-gray-500">Par ${s.pseudo} - ${new Date(s.date).toLocaleString('fr-FR')}</p>
-      <p class="text-sm text-gray-500">Réponses : ${s.replyCount || 0} | Participants : ${s.participantCount || 0}</p>
+      <p class="text-sm text-gray-500 dark:text-gray-400">Par ${s.pseudo} - ${new Date(s.date).toLocaleString('fr-FR')}</p>
+      <p class="text-sm text-gray-500 dark:text-gray-400">Réponses : ${s.total_replies || 0} | Participants : ${s.participantcount || 0}</p>
       <div class="flex space-x-2 mt-2">
         <a href="discussion.html?id=${s.id}" class="text-blue-500 hover:underline">Discuter</a>
-        <button class="text-primary-500 hover:text-primary-700 transition share-btn" data-id="${s.id}">
+        <button class="text-primary-500 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 transition share-btn" data-id="${s.id}">
           <i data-feather="share-2" class="h-5 w-5"></i> Partager
         </button>
-        <button class="text-primary-500 hover:text-primary-700 transition copy-btn" data-id="${s.id}">
+        <button class="text-primary-500 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 transition copy-btn" data-id="${s.id}">
           <i data-feather="copy" class="h-5 w-5"></i> Copier lien
         </button>
       </div>
@@ -61,13 +77,14 @@ function renderForums(subjects) {
   feather.replace();
 }
 
+// Filtrer par catégorie
 window.filterByCategory = (category) => {
   console.log('Filtrage par catégorie :', category);
-  if (category === 'all') renderForums(allSubjects.filter(s => !s.isPrivate));
-  else renderForums(allSubjects.filter(s => s.categories.name === category && !s.isPrivate));
+  if (category === 'all') renderForums(allSubjects.filter(s => !s.is_private));
+  else renderForums(allSubjects.filter(s => s.category_name === category && !s.is_private));
 };
 
-//fonction pour charger les catégories officielles au démarrage
+// Charger les catégories officielles
 async function loadCategories() {
   const { data, error } = await supabase
     .from('categories')
@@ -84,7 +101,7 @@ async function loadCategories() {
     '<option value="other">Autre</option>';
 }
 
-
+// Gestion du popup de création
 const createBtn = document.getElementById('createForumBtn');
 const createPopup = document.getElementById('createForumPopup');
 const createForm = document.getElementById('createForm');
@@ -124,7 +141,6 @@ createForm.addEventListener('submit', async (e) => {
     return;
   }
 
-  // Vérifier l’unicité du titre
   const { data: existingSubject } = await supabase
     .from('subjects')
     .select('id')
@@ -148,7 +164,6 @@ createForm.addEventListener('submit', async (e) => {
     password: isPrivate ? password : null,
   };
 
-  // Gestion de la catégorie
   if (categoryId === 'other') {
     if (!customCategory) {
       alert('Veuillez proposer une catégorie.');
@@ -217,16 +232,15 @@ createForm.addEventListener('submit', async (e) => {
   loadSubjects();
 });
 
-// Fonction de validation automatique
+// Validation des suggestions
 async function validateSuggestions() {
-  const THRESHOLD = 5; // Seuil pour qu'une suggestion devienne officielle
+  const THRESHOLD = 5;
   const { data: suggestions } = await supabase
     .from('category_suggestions')
     .select('*')
     .gte('proposal_count', THRESHOLD);
 
   for (const suggestion of suggestions) {
-    // Vérifier si la catégorie existe déjà
     const { data: existingCategory } = await supabase
       .from('categories')
       .select('id')
@@ -245,20 +259,18 @@ async function validateSuggestions() {
       categoryId = existingCategory.id;
     }
 
-    // Mettre à jour les sujets avec cette suggestion
     await supabase
       .from('subjects')
       .update({ category_id: categoryId, suggested_category: null })
       .eq('suggested_category', suggestion.name);
 
-    // Supprimer la suggestion validée
     await supabase
       .from('category_suggestions')
       .delete()
       .eq('id', suggestion.id);
   }
   console.log('Suggestion envoyée ! Elle sera validée après 5 propositions.');
-  loadCategories(); // Rafraîchir le menu déroulant
+  loadCategories();
 }
 
 // Recherche en temps réel
@@ -276,43 +288,42 @@ document.getElementById('searchForum').addEventListener('input', (e) => {
   }
 
   const matchingForums = allSubjects.filter(s => 
-    (privateOnly ? s.isPrivate : true) && (
+    (privateOnly ? s.is_private : true) && (
       s.titre.toLowerCase().includes(searchValue) ||
       s.message.toLowerCase().includes(searchValue) ||
-      s.categories.name.toLowerCase().includes(searchValue)
+      s.category_name.toLowerCase().includes(searchValue)
     )
   ).sort((a, b) => {
-    // Tri par pertinence : titre > message > catégorie
     const aTitleMatch = a.titre.toLowerCase().includes(searchValue);
     const bTitleMatch = b.titre.toLowerCase().includes(searchValue);
     if (aTitleMatch && !bTitleMatch) return -1;
     if (!aTitleMatch && bTitleMatch) return 1;
-    return b.date - a.date; // Sinon, plus récent en premier
+    return b.date - a.date;
   });
 
   if (matchingForums.length === 0) {
-    resultsDiv.innerHTML = '<p class="text-gray-600 text-sm">Aucun forum trouvé.</p>';
+    resultsDiv.innerHTML = '<p class="text-gray-600 dark:text-gray-400 text-sm">Aucun forum trouvé.</p>';
   } else {
     resultsDiv.innerHTML = `
-      <h3 class="font-semibold mb-2 text-sm sm:text-base">Résultats (${matchingForums.length}) :</h3>
+      <h3 class="font-semibold mb-2 text-sm sm:text-base text-gray-800 dark:text-gray-200">Résultats (${matchingForums.length}) :</h3>
       <ul class="space-y-2">
         ${matchingForums.slice(0, 10).map(f => `
-          <li class="border-b border-gray-100 pb-2">
+          <li class="border-b border-gray-100 dark:border-gray-600 pb-2">
             <a href="discussion.html?id=${f.id}" class="text-blue-500 hover:underline flex items-center">
               ${f.titre}
-              ${f.isPrivate ? '<i data-feather="lock" class="ml-2 h-4 w-4 text-gray-500"></i>' : ''}
+              ${f.is_private ? '<i data-feather="lock" class="ml-2 h-4 w-4 text-gray-500 dark:text-gray-400"></i>' : ''}
             </a>
-            <p class="text-sm text-gray-600">${f.categories.name}</p>
-            <p class="text-xs text-gray-500">Par ${f.pseudo} - ${new Date(f.date).toLocaleDateString('fr-FR')}</p>
+            <p class="text-sm text-gray-600 dark:text-gray-300">${f.category_name}</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Par ${f.pseudo} - ${new Date(f.date).toLocaleDateString('fr-FR')}</p>
           </li>
         `).join('')}
-        ${matchingForums.length > 10 ? '<p class="text-sm text-gray-500 mt-2">+ ' + (matchingForums.length - 10) + ' autres résultats...</p>' : ''}
+        ${matchingForums.length > 10 ? '<p class="text-sm text-gray-500 dark:text-gray-400 mt-2">+ ' + (matchingForums.length - 10) + ' autres résultats...</p>' : ''}
       </ul>
     `;
   }
   resultsDiv.classList.remove('hidden', 'scale-y-95', 'opacity-0');
   resultsDiv.classList.add('scale-y-100', 'opacity-100');
-  feather.replace(); // Rafraîchir les icônes Feather
+  feather.replace();
 });
 
 document.getElementById('clearSearch').addEventListener('click', () => {
@@ -320,13 +331,11 @@ document.getElementById('clearSearch').addEventListener('click', () => {
   document.getElementById('searchResults').classList.add('hidden');
 });
 
-// Bouton de recherche (optionnel, car temps réel)
 document.getElementById('searchForumBtn').addEventListener('click', () => {
   const searchInput = document.getElementById('searchForum');
-  searchInput.dispatchEvent(new Event('input')); // Simule une saisie pour déclencher la recherche
+  searchInput.dispatchEvent(new Event('input'));
 });
 
-//écouteur pour afficher/masquer le champ personnalisé
 document.getElementById('category').addEventListener('change', (e) => {
   const customWrapper = document.getElementById('customCategoryWrapper');
   customWrapper.classList.toggle('hidden', e.target.value !== 'other');
@@ -360,9 +369,31 @@ document.addEventListener('click', (e) => {
   }
 });
 
+// Gestion du thème sombre/clair
+const themeToggle = document.getElementById('themeToggle');
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('DOM chargé');
+  const savedTheme = localStorage.getItem('theme') || 'light';
+  document.documentElement.classList.toggle('dark', savedTheme === 'dark');
+  themeToggle.innerHTML = `<i data-feather="${savedTheme === 'dark' ? 'sun' : 'moon'}" class="h-5 w-5"></i>`;
+  feather.replace();
 
+  themeToggle.addEventListener('click', () => {
+    const isDark = document.documentElement.classList.toggle('dark');
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    themeToggle.innerHTML = `<i data-feather="${isDark ? 'sun' : 'moon'}" class="h-5 w-5"></i>`;
+    feather.replace();
+  });
 
+  loadCategories();
+  loadSubjects();
+});
 
-// Appeler au démarrage
-loadSubjects();
-loadCategories();
+// Mise à jour dynamique avec Supabase Realtime
+supabase
+  .channel('replies_changes')
+  .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'replies' }, () => {
+    console.log('Nouvelle réponse détectée, mise à jour des tendances...');
+    loadSubjects();
+  })
+  .subscribe();

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" class="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -45,13 +45,17 @@
   </script>
   <script src="https://unpkg.com/feather-icons"></script>
 </head>
-<body class="bg-gradient-to-br from-gray-50 to-blue-50 text-gray-800 font-sans min-h-screen flex flex-col">
+<body class="bg-gradient-to-br from-gray-50 to-blue-50 text-gray-800 font-sans min-h-screen flex flex-col transition-colors duration-300 dark:bg-gradient-to-br dark:from-gray-900 dark:to-gray-800 dark:text-gray-200">
   <!-- Header -->
-  <header class="bg-white shadow-md p-4 fixed top-0 w-full z-10 border-b border-primary-100">
+  <header class="bg-white shadow-md p-4 fixed top-0 w-full z-10 border-b border-primary-100 dark:bg-gray-800 dark:border-gray-700">
     <div class="max-w-7xl mx-auto flex justify-between items-center px-2 sm:px-4">
       <a href="index.html" class="text-xl sm:text-2xl font-bold bg-gradient-to-r from-primary-600 to-secondary-500 text-transparent bg-clip-text">Parole d'Ivoire</a>
       <div class="flex items-center space-x-3 sm:space-x-5">
-        <a href="about.html" class="text-primary-600 hover:text-primary-700 transition flex items-center text-sm sm:text-base">
+        <!-- Bouton thème -->
+        <button id="themeToggle" class="text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-gray-100 transition">
+          <i data-feather="sun" class="h-5 w-5"></i> <!-- Soleil par défaut -->
+        </button>
+        <a href="about.html" class="text-primary-600 hover:text-primary-700 transition flex items-center text-sm sm:text-base dark:text-primary-400 dark:hover:text-primary-300">
           <i data-feather="users" class="h-4 w-4 sm:h-5 sm:w-5 mr-1"></i>
           <span class="hidden sm:inline">Développeurs</span>
         </a>
@@ -177,11 +181,11 @@
   </main>
 
   <!-- Footer -->
-  <footer class="bg-white shadow-md p-4 fixed bottom-0 w-full border-t border-primary-100 z-10">
-    <div class="max-w-7xl mx-auto text-center text-gray-600 px-2 sm:px-4">
+  <footer class="bg-white shadow-md p-4 fixed bottom-0 w-full border-t border-primary-100 z-10 dark:bg-gray-800 dark:border-gray-700">
+    <div class="max-w-7xl mx-auto text-center text-gray-600 dark:text-gray-300 px-2 sm:px-4">
       <p class="flex items-center justify-center flex-wrap gap-x-2 sm:gap-x-3 text-sm sm:text-base">
         <span>Par</span>
-        <a href="about.html" class="text-primary-600 hover:text-primary-700 transition flex items-center">
+        <a href="about.html" class="text-primary-600 hover:text-primary-700 transition flex items-center dark:text-primary-400 dark:hover:text-primary-300">
           <i data-feather="users" class="h-4 w-4 mr-1"></i> Développeurs
         </a>
       </p>
